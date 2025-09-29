@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>Email Verification</h2>
+            <p id="emailDisplay">Enter the OTP sent to your email.</p>
+
+            <form id="verificationForm">
+                <div class="form-group">
+                    <input type="text" id="otp" placeholder="6-Digit OTP" maxlength="6" required>
+                </div>
+                <button type="submit">Verify Account</button>
+            </form>
+
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        const verificationEmail = localStorage.getItem('verificationEmail') || '';
+        const emailDisplay = document.getElementById('emailDisplay');
+
+        if (verificationEmail) {
+            emailDisplay.textContent = `Enter the OTP sent to: ${verificationEmail}`;
+        } else {
+            emailDisplay.textContent = `Please go back and register first.`;
+        }
+
+        document.getElementById('verificationForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const otp = document.getElementById('otp').value;
+            const messageDiv = document.getElementById('message');
+            
+            messageDiv.textContent = 'Verifying...';
+            messageDiv.className = 'success';
+            messageDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/verify-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: verificationEmail, otp: otp })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) { // 200 OK
+                    messageDiv.className = 'success';
+                    messageDiv.textContent = data.message + ' Redirecting to dashboard/login...';
+
+                    // Clear stored email and redirect to a login/dashboard page
+                    localStorage.removeItem('verificationEmail'); 
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html'; // We will use dashboard.html as a final confirmation page
+                    }, 1500);
+
+                } else {
+                    messageDiv.className = 'error';
+                    messageDiv.textContent = data.message || 'Verification failed.';
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                messageDiv.className = 'error';
+                messageDiv.textContent = 'Network error or server unavailable.';
+            }
+        });
+    </script>
+</body>
+</html>

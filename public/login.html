@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>Secure Login</h2>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="email" id="loginEmail" placeholder="Email Address" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                </div>
+                <button type="submit">Log In</button>
+            </form>
+
+            <div id="loginMessage" style="margin-top: 15px;"></div>
+
+            <p style="margin-top: 20px; font-size: 14px;">
+                Don't have an account? 
+                <a href="register.html" style="color: var(--primary-color); text-decoration: none;">Register here</a>.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
+            
+            messageDiv.textContent = 'Logging in...';
+            messageDiv.className = 'success';
+            messageDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) { // 200 OK
+                    messageDiv.className = 'success';
+                    messageDiv.textContent = data.message + ' Redirecting...';
+                    
+                    // Redirect to the secured dashboard page on success
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+
+                } else {
+                    messageDiv.className = 'error';
+                    messageDiv.textContent = data.message || 'Login failed.';
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                messageDiv.className = 'error';
+                messageDiv.textContent = 'Network error or server unavailable.';
+            }
+        });
+    </script>
+</body>
+</html>
